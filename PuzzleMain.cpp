@@ -11,7 +11,7 @@ PuzzleMain::PuzzleMain() {
     this->deleteFileWithSolution();
   } else {
     CsvParser parser;
-    if (parser.getRandomPuzzle(&this->puzzle)) {
+    if (parser.getPuzzle(&this->puzzle)) {
       this->puzzle.init();
       this->puzzle.print();
       this->puzzle.drawChessboard();

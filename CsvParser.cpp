@@ -6,14 +6,15 @@ using namespace std;
  * - read config.txt
  *  - get number of file lines
  *  - get number of files
- * - set random filename
- * - set random line
+ * - read counter.txt
+ *  - get nextPuzzle
+ *  - set file name
+ *  - set file line
  */
 CsvParser::CsvParser() {
 
   // read lines, files from config.txt
   SdFat SD = Utils::initSdCard();
-
   File32 myFile = SD.open(this->PUZZLE_CONFIG);
   char line[400];
   if (myFile) {
@@ -42,23 +43,52 @@ CsvParser::CsvParser() {
   Serial.printf("[CsvParser] lines: %d \n", this->lines);
   Serial.printf("[CsvParser] files: %d \n", this->files);
 
-  // get random file
-  randomSeed(analogRead(A0));
-  int randPuzzleFile = random(this->files) + 1;
-  this->selectedPuzzleFile = "puzzle-" + std::to_string(randPuzzleFile) + ".csv";
+  // read from counter.txt
+  myFile = SD.open(this->PUZZLE_COUNTER);
+  if (myFile) {
+    while (myFile.available()) {
+      int n = myFile.fgets(line, sizeof(line));
+      if (n <= 0) {
+        Serial.println("[CsvParser] ERR: fgets2 failed");
+      }
+      if (line[n - 1] != '\n' && n == (sizeof(line) - 1)) {
+        Serial.println("[CsvParser] ERR: line too long");
+      }
+      string str = line;
+      int val = stoi(str);
+      if (this->nextPuzzle == 0) {
+        this->nextPuzzle = val;
+        break;
+      }
+    }
+    // close the file:
+    myFile.close();
+  } else {
+    Serial.println("[CsvParser] counter file not found");
+  }
+  Serial.printf("[CsvParser] oldPuzzle: %d \n", this->nextPuzzle);
+  this->nextPuzzle = (this->nextPuzzle + 1) % (this->lines * this->files);
+  Serial.printf("[CsvParser] nextPuzzle: %d \n", this->nextPuzzle);
 
+  // get file
+  int puzzleFile = (this->nextPuzzle / this->lines) % this->files;
+  puzzleFile++;  // starting with puzzle-1.csv file
+  this->selectedPuzzleFile = "puzzle-" + std::to_string(puzzleFile) + ".csv";
   Serial.printf("[CsvParser] Reading CSV file: %s \n", this->selectedPuzzleFile.c_str());
 
-  // get random line
-  randomSeed(analogRead(A0));
-  this->selectedPuzzleLine = random(this->lines) + 1;
+  // get line
+  this->selectedPuzzleLine = this->nextPuzzle % this->lines;
+  this->selectedPuzzleLine++;  // starting from line 1
   Serial.printf("[CsvParser] selected puzzle on line %d \n", this->selectedPuzzleLine);
+
+  this->deleteFilePuzzleCounter();
+  this->createFilePuzzleCounter();
 }
 
 /*
  * - read puzzle from csv
  */
-bool CsvParser::getRandomPuzzle(ChessPuzzle* puzzle) {
+bool CsvParser::getPuzzle(ChessPuzzle* puzzle) {
 
   // init SD card
   SdFat SD = Utils::initSdCard();
@@ -137,4 +167,23 @@ void CsvParser::parseLine(ChessPuzzle* puzzle, char* str) {
   fen = strtok(nullptr, " ");
   if (!fen) return;
   puzzle->enPassant = fen;
+}
+
+void CsvParser::deleteFilePuzzleCounter() {
+  bool deleted = false;
+  SdFat SD = Utils::initSdCard();
+  if (SD.exists(this->PUZZLE_COUNTER)) {
+    deleted = SD.remove(this->PUZZLE_COUNTER);
+  }
+  Serial.printf("[CsvParser] delete last puzzle file: %s \n", deleted ? "deleted" : "not deleted");
+}
+
+void CsvParser::createFilePuzzleCounter() {
+  // init SD card required, otherwise the file is not created
+  SdFat SD = Utils::initSdCard();
+  File32 myFile = SD.open(this->PUZZLE_COUNTER, FILE_WRITE);
+  myFile.print(this->nextPuzzle, 10);
+  bool success = myFile.close();
+  Serial.printf("[CsvParser] createFilePuzzleCounter nextPuzzle: %d \n", this->nextPuzzle);
+  Serial.printf("[CsvParser] createFilePuzzleCounter %s \n", success ? "success" : "failed");
 }

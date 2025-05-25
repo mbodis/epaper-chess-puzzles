@@ -10,6 +10,7 @@ using namespace std;
 class CsvParser {
 private:
   char *PUZZLE_CONFIG = (char *)"config.txt";
+  char *PUZZLE_COUNTER = (char *)"counter.txt";
 
   string selectedPuzzleFile;
   int selectedPuzzleLine = 0;
@@ -28,11 +29,19 @@ private:
    */
   long files = 0;
 
+  /*
+   * puzzle we are going to display
+   * one number stored in counter.txt (max lines * files)
+   */
+  long nextPuzzle = 0;
+
   void parseLine(ChessPuzzle *, char *);
 
 public:
   CsvParser();
-  bool getRandomPuzzle(ChessPuzzle *);
+  bool getPuzzle(ChessPuzzle *);
+  void createFilePuzzleCounter();
+  void deleteFilePuzzleCounter();
 };
 
 #endif  // CSVPARSER_H

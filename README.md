@@ -50,6 +50,7 @@ Perfect for practicing chess tactics on the go, with long battery life thanks to
 
 ---
   - should contain `config.txt` file with two numbers. First is the number of lines. Second number of files.
+  - should contain `counter.txt` file with one number. For beginnig it should be set to zero. Keep position in puzzles.
   - list of puzzles accordingly to config files puzzle-1.csv, puzzle-2.csv ... 
 
 ## schema:
