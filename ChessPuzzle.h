@@ -36,11 +36,14 @@ public:
   // e.g. e3, or - when not possible
   char* enPassant = new char[20];
 
+  long puzzleCounter = 0;
+  bool isMessage = false;
+
   ChessBoard chessBoard;
 
   ChessPuzzle();
   void init();
-  void print();
+  void printToLog();
   void drawChessboard();
   void drawSolution();
 };

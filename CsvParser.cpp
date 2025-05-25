@@ -167,6 +167,8 @@ void CsvParser::parseLine(ChessPuzzle* puzzle, char* str) {
   fen = strtok(nullptr, " ");
   if (!fen) return;
   puzzle->enPassant = fen;
+
+  puzzle->puzzleCounter = this->nextPuzzle;
 }
 
 void CsvParser::deleteFilePuzzleCounter() {

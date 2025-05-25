@@ -13,9 +13,11 @@ PuzzleMain::PuzzleMain() {
     CsvParser parser;
     if (parser.getPuzzle(&this->puzzle)) {
       this->puzzle.init();
-      this->puzzle.print();
+      this->puzzle.printToLog();
       this->puzzle.drawChessboard();
-      this->createFileWithSolution();
+      if (!this->puzzle.isMessage){
+        this->createFileWithSolution();
+      }
     }
   }
 
