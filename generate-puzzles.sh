@@ -5,9 +5,10 @@ FILE="lichess_db_puzzle.csv"
 LINES=${1:-1000}
 FILES=${2:-100}
 
+MAX_MOVES=13
 
-echo "[epaper-chess-puzzles] generating $FILES files"
-echo "[epaper-chess-puzzles] each file has $LINES lines"
+echo "[epaper-chess-puzzles]: generating $FILES files"
+echo "[epaper-chess-puzzles]: each file has $LINES lines"
 
 
 if [ ! -f $FILE ]; then
@@ -21,14 +22,21 @@ if [ ! -f $FILE ]; then
 	rm ./lichess_db_puzzle.csv.zst
 fi
 
-# remove 1 line of CSV
+echo "[epaper-chess-puzzles]: remove 1 line of CSV"
 tail -n +2 $FILE > temp
 
-# cut first LINES * FILES lines
+echo "[epaper-chess-puzzles]: filter puzzles with solution length <= MAX_MOVES (3rd CSV column)"
+awk -F',' -v max="$MAX_MOVES" '{
+    moves = split($3, a, " ")
+    if (moves <= max) print
+}' temp > temp_filtered && mv temp_filtered temp
+
+
+echo "[epaper-chess-puzzles]: cut first LINES * FILES lines"
 CSV_LINES=$(expr $LINES '*' $FILES)
 head -n $CSV_LINES temp > temp2 && mv temp2 temp
 
-# split into files
+echo "[epaper-chess-puzzles]: split into files"
 mkdir -p sd-card
 
 split -d -l ${LINES} temp "sd-card/puzzle.csv"
@@ -41,8 +49,8 @@ done
 
 rm temp
 
-# create config file
-rm ./sd-card/config.txt || true
+echo "[epaper-chess-puzzles]: create config file"
+rm -f ./sd-card/config.txt
 touch sd-card/config.txt
 echo "$LINES" >> "./sd-card/config.txt"
 echo "$FILES" >> "./sd-card/config.txt"

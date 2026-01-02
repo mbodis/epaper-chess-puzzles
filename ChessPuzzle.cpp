@@ -185,8 +185,8 @@ void ChessPuzzle::drawSolution() {
     yy += 15;
   }
 
-  // partly print only solution
-  EPD_4IN2_PartialDisplay(285, 90, 380, 250, BlackImage);
+  // partly print only solution - max 13 moves
+  EPD_4IN2_PartialDisplay(285, 90, 380, 295, BlackImage);
 
   // clean
   DEV_Delay_ms(500);
