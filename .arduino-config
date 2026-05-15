@@ -1,0 +1,3 @@
+BOARD=rp2040:rp2040:adafruit_feather_adalogger
+PORT=/dev/cu.usbmodem21201
+SKETCH_PATH=.
