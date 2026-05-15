@@ -4,15 +4,13 @@
 #include "ChessPuzzle.h"
 #include <Arduino.h>
 #include "Utils.h"
-using namespace std;
-#include <string>
 
 class CsvParser {
 private:
   char *PUZZLE_CONFIG = (char *)"config.txt";
   char *PUZZLE_COUNTER = (char *)"counter.txt";
 
-  string selectedPuzzleFile;
+  String selectedPuzzleFile;
   int selectedPuzzleLine = 0;
 
   /*

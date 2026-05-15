@@ -26,7 +26,8 @@ PuzzleMain::PuzzleMain() {
 
 bool PuzzleMain::hasSolutionFile() {
   bool exists = SD.exists(this->SOLUTION_FILE);
-  Serial.printf("[PuzzleMain] %s \n", exists ? "draw solution" : "draw new puzzle");
+  Serial.print("[PuzzleMain] ");
+  Serial.println(exists ? "draw solution" : "draw new puzzle");
   return exists;
 }
 
@@ -59,13 +60,16 @@ void PuzzleMain::deleteFileWithSolution() {
   if (SD.exists(this->SOLUTION_FILE)) {
     deleted = SD.remove(this->SOLUTION_FILE);
   }
-  Serial.printf("[PuzzleMain] solution file %s \n", deleted ? "deleted" : "not deleted");
+  Serial.print("[PuzzleMain] solution file ");
+  Serial.println(deleted ? "deleted" : "not deleted");
 }
 
 void PuzzleMain::createFileWithSolution() {
   File32 myFile = SD.open(this->SOLUTION_FILE, FILE_WRITE);
   myFile.print(this->puzzle.solution);
   bool success = myFile.close();
-  Serial.printf("[PuzzleMain] solution: %s \n", this->puzzle.solution);
-  Serial.printf("[PuzzleMain] createFileWithSolution %s \n", success ? "success" : "failed");
+  Serial.print("[PuzzleMain] solution: ");
+  Serial.println(this->puzzle.solution);
+  Serial.print("[PuzzleMain] createFileWithSolution ");
+  Serial.println(success ? "success" : "failed");
 }

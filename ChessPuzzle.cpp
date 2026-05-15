@@ -9,12 +9,19 @@ void ChessPuzzle::init() {
 
 void ChessPuzzle::printToLog() {
   Serial.println("[ChessPuzzle] --selected puzzle--");
-  Serial.printf("[ChessPuzzle] id: %s \n", this->id);
-  Serial.printf("[ChessPuzzle] FEN notation: %s \n", this->fenNotation);
-  Serial.printf("[ChessPuzzle] solution: %s \n", this->solution);
-  Serial.printf("[ChessPuzzle] %s is on the move \n", this->whiteIsOnTheMove ? "white" : "black");
-  Serial.printf("[ChessPuzzle] en passant: %s \n", this->enPassant);
-  Serial.printf("[ChessPuzzle] castling availability: %s \n", this->castlingAvailability);
+  Serial.print("[ChessPuzzle] id: ");
+  Serial.println(this->id);
+  Serial.print("[ChessPuzzle] FEN notation: ");
+  Serial.println(this->fenNotation);
+  Serial.print("[ChessPuzzle] solution: ");
+  Serial.println(this->solution);
+  Serial.print("[ChessPuzzle] ");
+  Serial.print(this->whiteIsOnTheMove ? "white" : "black");
+  Serial.println(" is on the move");
+  Serial.print("[ChessPuzzle] en passant: ");
+  Serial.println(this->enPassant);
+  Serial.print("[ChessPuzzle] castling availability: ");
+  Serial.println(this->castlingAvailability);
   this->chessBoard.printBoard();
 }
 
