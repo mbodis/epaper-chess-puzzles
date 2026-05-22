@@ -28,9 +28,16 @@ Perfect for practicing chess tactics on the go, with long battery life thanks to
 2. install RP2040 board https://learn.adafruit.com/adafruit-feather-rp2040-adalogger/arduino (version 4.4.1)
 3. install library for sd card: https://learn.adafruit.com/adafruit-feather-rp2040-adalogger/sd-card-2   
    - (note: 32 GB not working, 8GB working correctly)
-4. download epaper library: https://www.waveshare.com/wiki/E-Paper_ESP8266_Driver_Board
-   - copy into `~/Arduino/libraries`
-   - update `DEV_Config.h` in `~/Arduino/libraries/EPD4in2-lib` to match to board
+4. setup epaper library (two options):
+
+   **Option 1: Use included library (recommended)**
+   - create symlink: `ln -s /path/to/repo/lib ~/Documents/Arduino/libraries/EPD4in2`
+   - GPIO config is already set in `lib/DEV_Config.h` for Adalogger RP2040
+
+   **Option 2: Download manually**
+   - download from: https://www.waveshare.com/wiki/E-Paper_ESP8266_Driver_Board
+   - copy into `~/Documents/Arduino/libraries/EPD4in2`
+   - update `DEV_Config.h` to match board:
      ```
      // GPIO config Adalogger RP2040 with 4.2 waveshare epaper
      #define EPD_SCK_PIN  14
