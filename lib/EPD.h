@@ -31,7 +31,7 @@
 // #include "utility/EPD_3in52.h"
 // #include "utility/EPD_4in01f.h"
 #include "utility/EPD_4in2.h"
-// #include "utility/EPD_4in2_V2.h"
+#include "utility/EPD_4in2_V2.h"
 // #include "utility/EPD_4in2bc.h"
 // #include "utility/EPD_4in2b_V2.h"
 // #include "utility/EPD_4in26.h"

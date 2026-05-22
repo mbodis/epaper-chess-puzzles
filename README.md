@@ -33,6 +33,8 @@ Perfect for practicing chess tactics on the go, with long battery life thanks to
    **Option 1: Use included library (recommended)**
    - create symlink: `ln -s /path/to/repo/lib ~/Documents/Arduino/libraries/EPD4in2`
    - GPIO config is already set in `lib/DEV_Config.h` for Adalogger RP2040
+   - library supports both 4.2" e-paper (original) and V2 displays
+   - to use V2 display, uncomment `#define USE_EPAPER_V2` in `ChessPuzzle.h`
 
    **Option 2: Download manually**
    - download from: https://www.waveshare.com/wiki/E-Paper_ESP8266_Driver_Board

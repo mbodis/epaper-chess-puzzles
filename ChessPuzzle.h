@@ -1,6 +1,13 @@
 #ifndef CHESSPUZZLE_H
 #define CHESSPUZZLE_H
 
+/* display version selection */
+#define USE_EPAPER_V2  // Uncomment this line to use 4.2" e-paper V2 display
+
+/* display constants (same for both original and V2) */
+#define EPAPER_WIDTH  400
+#define EPAPER_HEIGHT 300
+
 /* display */
 #include "DEV_Config.h"
 #include "EPD.h"

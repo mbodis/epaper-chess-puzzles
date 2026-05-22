@@ -30,20 +30,25 @@ void ChessPuzzle::drawChessboard() {
   DEV_Module_Init();
 
   // clear screen
+#ifdef USE_EPAPER_V2
+  EPD_4IN2_V2_Init_Fast(0);
+  EPD_4IN2_V2_Clear();
+#else
   EPD_4IN2_Init_Fast();
   EPD_4IN2_Clear();
+#endif
   DEV_Delay_ms(500);
 
   // Create a new image cache
   UBYTE *BlackImage;
-  UWORD Imagesize = ((EPD_4IN2_WIDTH % 8 == 0) ? (EPD_4IN2_WIDTH / 8) : (EPD_4IN2_WIDTH / 8 + 1)) * EPD_4IN2_HEIGHT;
+  UWORD Imagesize = ((EPAPER_WIDTH % 8 == 0) ? (EPAPER_WIDTH / 8) : (EPAPER_WIDTH / 8 + 1)) * EPAPER_HEIGHT;
   if ((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) {
     Serial.println("[ChessPuzzle] ERR: Failed to apply for black memory...");
     while (1)
       ;
   }
   // new image
-  Paint_NewImage(BlackImage, EPD_4IN2_WIDTH, EPD_4IN2_HEIGHT, 0, WHITE);
+  Paint_NewImage(BlackImage, EPAPER_WIDTH, EPAPER_HEIGHT, 0, WHITE);
   Paint_SelectImage(BlackImage);
   Paint_Clear(WHITE);
 
@@ -146,11 +151,19 @@ void ChessPuzzle::drawChessboard() {
   }
 
   // final print
+#ifdef USE_EPAPER_V2
+  EPD_4IN2_V2_Display(BlackImage);
+#else
   EPD_4IN2_Display(BlackImage);
+#endif
 
   // clean
   DEV_Delay_ms(500);
+#ifdef USE_EPAPER_V2
+  EPD_4IN2_V2_Sleep();
+#else
   EPD_4IN2_Sleep();
+#endif
   free(BlackImage);
   BlackImage = NULL;
 }
@@ -158,19 +171,23 @@ void ChessPuzzle::drawChessboard() {
 void ChessPuzzle::drawSolution() {
   DEV_Module_Init();
   // need to init partial otherwise image will be inverted
+#ifdef USE_EPAPER_V2
+  EPD_4IN2_V2_Init(); // TODO FIX - not working properly
+#else
   EPD_4IN2_Init_Partial();
+#endif
   DEV_Delay_ms(500);
 
   //Create a new image cache
   UBYTE *BlackImage;
-  UWORD Imagesize = ((EPD_4IN2_WIDTH % 8 == 0) ? (EPD_4IN2_WIDTH / 8) : (EPD_4IN2_WIDTH / 8 + 1)) * EPD_4IN2_HEIGHT;
+  UWORD Imagesize = ((EPAPER_WIDTH % 8 == 0) ? (EPAPER_WIDTH / 8) : (EPAPER_WIDTH / 8 + 1)) * EPAPER_HEIGHT;
   if ((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) {
     Serial.println("[ChessPuzzle] ERR: Failed to apply for black memory...");
     while (1)
       ;
   }
   // new image
-  Paint_NewImage(BlackImage, EPD_4IN2_WIDTH, EPD_4IN2_HEIGHT, 0, WHITE);
+  Paint_NewImage(BlackImage, EPAPER_WIDTH, EPAPER_HEIGHT, 0, WHITE);
   Paint_SelectImage(BlackImage);
   Paint_Clear(WHITE);
 
@@ -186,11 +203,23 @@ void ChessPuzzle::drawSolution() {
   }
 
   // partly print only solution - max 13 moves
-  EPD_4IN2_PartialDisplay(285, 90, 380, 295, BlackImage);
+  int startX = 285;
+  int startY = 90;
+  int endX = 380;
+  int endY = 295;
+#ifdef USE_EPAPER_V2
+  EPD_4IN2_V2_PartialDisplay(BlackImage, startX, startY, endX, endY);
+#else
+  EPD_4IN2_PartialDisplay(startX, startY, endX, endY, BlackImage);
+#endif
 
   // clean
   DEV_Delay_ms(500);
+#ifdef USE_EPAPER_V2
+  EPD_4IN2_V2_Sleep();
+#else
   EPD_4IN2_Sleep();
+#endif
   free(BlackImage);
   BlackImage = NULL;
 }
