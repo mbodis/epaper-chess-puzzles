@@ -20,6 +20,11 @@ class PuzzleMain {
 public:
   char *SOLUTION_FILE = (char *)"solution.txt";
 
+  // Persistent buffer holding the parsed solution file line.
+  // Required because CsvParser::parseLine stores pointers into this
+  // buffer (via strtok) and the puzzle then references those pointers.
+  char solutionLine[400];
+
   PuzzleMain();
 
   void createFileWithSolution();

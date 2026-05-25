@@ -35,13 +35,16 @@ private:
    */
   long nextPuzzle = 0;
 
-  void parseLine(ChessPuzzle *, char *);
-
 public:
   CsvParser();
   bool getPuzzle(ChessPuzzle *);
   void createFilePuzzleCounter();
   void deleteFilePuzzleCounter();
+
+  // Parses one CSV-format puzzle line into the given ChessPuzzle.
+  // Exposed so other modules (e.g. PuzzleMain) can reload a saved
+  // puzzle line from the solution file.
+  static void parseLine(ChessPuzzle *, char *);
 };
 
 #endif  // CSVPARSER_H

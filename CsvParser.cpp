@@ -111,7 +111,8 @@ bool CsvParser::getPuzzle(ChessPuzzle* puzzle) {
       if (line[n - 1] != '\n' && n == (sizeof(line) - 1)) {
         Serial.println("[CsvParser] ERR: line too long");
       }
-      this->parseLine(puzzle, line);
+      CsvParser::parseLine(puzzle, line);
+      puzzle->puzzleCounter = this->nextPuzzle;
       break;
     }
     // close the file:
@@ -167,8 +168,6 @@ void CsvParser::parseLine(ChessPuzzle* puzzle, char* str) {
   fen = strtok(nullptr, " ");
   if (!fen) return;
   puzzle->enPassant = fen;
-
-  puzzle->puzzleCounter = this->nextPuzzle;
 }
 
 void CsvParser::deleteFilePuzzleCounter() {

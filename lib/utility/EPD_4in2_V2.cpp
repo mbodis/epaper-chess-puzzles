@@ -510,6 +510,12 @@ void EPD_4IN2_V2_Display_4Gray(UBYTE *Image)
 }
 
 // Send partial data for partial refresh
+// NOTE: After a power cycle the controller SRAM is undefined. The partial
+// waveform would otherwise pulse random pixels across the whole panel and
+// produce noise. We therefore pre-fill BOTH RAM planes with white over the
+// full panel, so any pixel outside the update window sees white->white and
+// receives no pulse, leaving the previously-displayed image physically
+// untouched. Only the requested window is overwritten with `Image`.
 void EPD_4IN2_V2_PartialDisplay(UBYTE *Image, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend)
 {
     if((Xstart % 8 + Xend % 8 == 8 && Xstart % 8 > Xend % 8) || Xstart % 8 + Xend % 8 == 0 || (Xend - Xstart)%8 == 0)
@@ -562,6 +568,73 @@ void EPD_4IN2_V2_PartialDisplay(UBYTE *Image, UWORD Xstart, UWORD Ystart, UWORD 
 	}
 	
 	EPD_4IN2_V2_TurnOnDisplay_Partial();
+}
+
+// Same hardware init as full mode. Kept as a separate symbol so callers
+// can express intent and so we can diverge later if needed.
+void EPD_4IN2_V2_Init_Partial(void)
+{
+    EPD_4IN2_V2_Init();
+}
+
+// Diff-based partial refresh for the SSD168x V2 controller.
+//
+// Why this exists:
+//   On the original 4.2" panel (UC8176) the partial-refresh path uses two
+//   RAM planes (cmd 0x10 = old data, 0x13 = new data) and writes only a
+//   small window. After a power cycle the driver-side cache is zeroed,
+//   so unchanged pixels effectively see "old==new" and the panel stays
+//   stable outside the window.
+//
+//   The V2 panel (SSD168x) instead exposes 0x26 (previous frame plane)
+//   and 0x24 (new frame plane). After a power cycle the controller SRAM
+//   contents are undefined, so a windowed write only on 0x24 produces
+//   visible noise across the rest of the panel - the OTP partial LUT
+//   pulses every pixel because the "previous" plane is garbage.
+//
+// What this function does:
+//   The caller supplies the FULL previous frame and the FULL new frame
+//   (both 400x300 = 15000 bytes). We write the previous frame to 0x26
+//   and the new frame to 0x24 over the entire panel and trigger a
+//   partial refresh. Pixels that are byte-identical between the two
+//   planes receive no transition from the partial waveform LUT and stay
+//   physically unchanged on the panel; only differing pixels are pulsed.
+//
+//   In this project the previous frame is rebuilt by the MCU after a
+//   power cycle from data persisted to SD card (FEN + puzzle metadata
+//   in solution.txt), so it matches what is currently on the screen.
+void EPD_4IN2_V2_PartialDisplayDiff(UBYTE *OldImage, UBYTE *NewImage)
+{
+    UWORD Width = (EPD_4IN2_V2_WIDTH % 8 == 0) ? (EPD_4IN2_V2_WIDTH / 8) : (EPD_4IN2_V2_WIDTH / 8 + 1);
+    UDOUBLE total = (UDOUBLE)Width * EPD_4IN2_V2_HEIGHT;
+    UDOUBLE k;
+
+    // Partial-mode border so the screen does not flash
+    EPD_4IN2_V2_SendCommand(0x3C);
+    EPD_4IN2_V2_SendData(0x80);
+
+    // Make sure we use both RAM planes normally (no source bypass)
+    EPD_4IN2_V2_SendCommand(0x21);
+    EPD_4IN2_V2_SendData(0x00);
+    EPD_4IN2_V2_SendData(0x00);
+
+    // Old frame -> previous-frame plane (0x26), full panel
+    EPD_4IN2_V2_SetWindows(0, 0, EPD_4IN2_V2_WIDTH - 1, EPD_4IN2_V2_HEIGHT - 1);
+    EPD_4IN2_V2_SetCursor(0, 0);
+    EPD_4IN2_V2_SendCommand(0x26);
+    for (k = 0; k < total; k++) {
+        EPD_4IN2_V2_SendData(OldImage[k]);
+    }
+
+    // New frame -> new-frame plane (0x24), full panel
+    EPD_4IN2_V2_SetWindows(0, 0, EPD_4IN2_V2_WIDTH - 1, EPD_4IN2_V2_HEIGHT - 1);
+    EPD_4IN2_V2_SetCursor(0, 0);
+    EPD_4IN2_V2_SendCommand(0x24);
+    for (k = 0; k < total; k++) {
+        EPD_4IN2_V2_SendData(NewImage[k]);
+    }
+
+    EPD_4IN2_V2_TurnOnDisplay_Partial();
 }
 
 /******************************************************************************

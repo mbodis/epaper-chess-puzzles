@@ -47,6 +47,32 @@ void ChessPuzzle::drawChessboard() {
     while (1)
       ;
   }
+
+  this->renderChessboardImage(BlackImage);
+
+  // final print
+#ifdef USE_EPAPER_V2
+  EPD_4IN2_V2_Display(BlackImage);
+#else
+  EPD_4IN2_Display(BlackImage);
+#endif
+
+  // clean
+  DEV_Delay_ms(500);
+#ifdef USE_EPAPER_V2
+  EPD_4IN2_V2_Sleep();
+#else
+  EPD_4IN2_Sleep();
+#endif
+  free(BlackImage);
+  BlackImage = NULL;
+}
+
+// Renders the current puzzle (welcome / congratulations / chessboard +
+// metadata) into the given full-screen image buffer. Used by both
+// drawChessboard() and drawSolution() so the solution view can include
+// the original chessboard as background for V2 partial refresh.
+void ChessPuzzle::renderChessboardImage(UBYTE *BlackImage) {
   // new image
   Paint_NewImage(BlackImage, EPAPER_WIDTH, EPAPER_HEIGHT, 0, WHITE);
   Paint_SelectImage(BlackImage);
@@ -149,52 +175,38 @@ void ChessPuzzle::drawChessboard() {
     Paint_DrawString_EN(290, 60, "next move:", &Font12, WHITE, BLACK);
     Paint_DrawString_EN(290, 70, this->whiteIsOnTheMove ? "White" : "Black", &Font16, WHITE, BLACK);
   }
-
-  // final print
-#ifdef USE_EPAPER_V2
-  EPD_4IN2_V2_Display(BlackImage);
-#else
-  EPD_4IN2_Display(BlackImage);
-#endif
-
-  // clean
-  DEV_Delay_ms(500);
-#ifdef USE_EPAPER_V2
-  EPD_4IN2_V2_Sleep();
-#else
-  EPD_4IN2_Sleep();
-#endif
-  free(BlackImage);
-  BlackImage = NULL;
 }
 
 void ChessPuzzle::drawSolution() {
   DEV_Module_Init();
-  // need to init partial otherwise image will be inverted
-#ifdef USE_EPAPER_V2
-  EPD_4IN2_V2_Init(); // TODO FIX - not working properly
-#else
-  EPD_4IN2_Init_Partial();
-#endif
-  DEV_Delay_ms(500);
 
-  //Create a new image cache
-  UBYTE *BlackImage;
   UWORD Imagesize = ((EPAPER_WIDTH % 8 == 0) ? (EPAPER_WIDTH / 8) : (EPAPER_WIDTH / 8 + 1)) * EPAPER_HEIGHT;
-  if ((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) {
+
+#ifdef USE_EPAPER_V2
+  // V2 diff-based partial refresh needs TWO full-screen buffers:
+  //   - OldImage: chessboard as it is currently on the panel (rendered
+  //     from the FEN that was persisted to SD by drawChessboard()).
+  //   - NewImage: chessboard + solution text overlay.
+  // For every pixel where OldImage == NewImage the V2 partial waveform
+  // produces no pulse, so the chessboard area on the panel is left
+  // untouched and only the solution rect changes.
+  UBYTE *OldImage = (UBYTE *)malloc(Imagesize);
+  UBYTE *NewImage = (UBYTE *)malloc(Imagesize);
+  if (OldImage == NULL || NewImage == NULL) {
     Serial.println("[ChessPuzzle] ERR: Failed to apply for black memory...");
     while (1)
       ;
   }
-  // new image
-  Paint_NewImage(BlackImage, EPAPER_WIDTH, EPAPER_HEIGHT, 0, WHITE);
-  Paint_SelectImage(BlackImage);
-  Paint_Clear(WHITE);
 
-  // print solution
+  // Render the chessboard into the "old" buffer.
+  this->renderChessboardImage(OldImage);
+  // Start the "new" buffer as an identical copy.
+  memcpy(NewImage, OldImage, Imagesize);
+
+  // Overlay the solution text only on the new buffer.
+  Paint_SelectImage(NewImage);
   Paint_DrawString_EN(290, 90, "solution:", &Font12, WHITE, BLACK);
   int yy = 100;
-
   char *partlySolution = strtok(this->solution, " ");
   while (partlySolution != nullptr) {
     Paint_DrawString_EN(290, yy, partlySolution, &Font16, WHITE, BLACK);
@@ -202,24 +214,50 @@ void ChessPuzzle::drawSolution() {
     yy += 15;
   }
 
-  // partly print only solution - max 13 moves
+  EPD_4IN2_V2_Init_Partial();
+  DEV_Delay_ms(500);
+  EPD_4IN2_V2_PartialDisplayDiff(OldImage, NewImage);
+
+  DEV_Delay_ms(500);
+  EPD_4IN2_V2_Sleep();
+
+  free(OldImage);
+  free(NewImage);
+  OldImage = NULL;
+  NewImage = NULL;
+#else
+  // V1 path: uses a single buffer; V1 driver keeps its own old-data RAM cache.
+  EPD_4IN2_Init_Partial();
+  DEV_Delay_ms(500);
+
+  UBYTE *BlackImage;
+  if ((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) {
+    Serial.println("[ChessPuzzle] ERR: Failed to apply for black memory...");
+    while (1)
+      ;
+  }
+  Paint_NewImage(BlackImage, EPAPER_WIDTH, EPAPER_HEIGHT, 0, WHITE);
+  Paint_SelectImage(BlackImage);
+  Paint_Clear(WHITE);
+
+  Paint_DrawString_EN(290, 90, "solution:", &Font12, WHITE, BLACK);
+  int yy = 100;
+  char *partlySolution = strtok(this->solution, " ");
+  while (partlySolution != nullptr) {
+    Paint_DrawString_EN(290, yy, partlySolution, &Font16, WHITE, BLACK);
+    partlySolution = strtok(nullptr, " ");
+    yy += 15;
+  }
+
   int startX = 285;
   int startY = 90;
   int endX = 380;
   int endY = 295;
-#ifdef USE_EPAPER_V2
-  EPD_4IN2_V2_PartialDisplay(BlackImage, startX, startY, endX, endY);
-#else
   EPD_4IN2_PartialDisplay(startX, startY, endX, endY, BlackImage);
-#endif
 
-  // clean
   DEV_Delay_ms(500);
-#ifdef USE_EPAPER_V2
-  EPD_4IN2_V2_Sleep();
-#else
   EPD_4IN2_Sleep();
-#endif
   free(BlackImage);
   BlackImage = NULL;
+#endif
 }

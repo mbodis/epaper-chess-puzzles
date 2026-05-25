@@ -41,6 +41,7 @@
 #define Seconds_1S        1
 
 void EPD_4IN2_V2_Init(void);
+void EPD_4IN2_V2_Init_Partial(void);
 void EPD_4IN2_V2_Init_Fast(UBYTE Mode);
 void EPD_4IN2_V2_Init_4Gray(void);
 void EPD_4IN2_V2_Clear(void);
@@ -48,6 +49,7 @@ void EPD_4IN2_V2_Display(UBYTE *Image);
 void EPD_4IN2_V2_Display_Fast(UBYTE *Image);
 void EPD_4IN2_V2_Display_4Gray(UBYTE *Image);
 void EPD_4IN2_V2_PartialDisplay(UBYTE *Image, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend);
+void EPD_4IN2_V2_PartialDisplayDiff(UBYTE *OldImage, UBYTE *NewImage);
 void EPD_4IN2_V2_Sleep(void);
 
 #endif

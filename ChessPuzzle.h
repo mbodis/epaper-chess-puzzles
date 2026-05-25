@@ -2,7 +2,7 @@
 #define CHESSPUZZLE_H
 
 /* display version selection */
-#define USE_EPAPER_V2  // Uncomment this line to use 4.2" e-paper V2 display
+// #define USE_EPAPER_V2  // Uncomment this line to use 4.2" e-paper V2 display
 
 /* display constants (same for both original and V2) */
 #define EPAPER_WIDTH  400
@@ -14,6 +14,7 @@
 #include "GUI_Paint.h"
 #include "imagedata.h"
 #include <stdlib.h>
+#include <string.h>
 
 #include <Arduino.h>
 #include "ChessBoard.h"
@@ -53,6 +54,13 @@ public:
   void printToLog();
   void drawChessboard();
   void drawSolution();
+
+private:
+  // Renders the current puzzle (welcome / congratulations / chessboard
+  // + metadata) into the given full-screen image buffer.
+  // Shared between drawChessboard() and drawSolution() so the solution
+  // view can include the chessboard as background for V2 partial refresh.
+  void renderChessboardImage(UBYTE *image);
 };
 
 #endif  // CHESSPUZZLE_H

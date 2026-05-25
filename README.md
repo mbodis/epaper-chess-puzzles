@@ -61,6 +61,15 @@ Perfect for practicing chess tactics on the go, with long battery life thanks to
   - should contain `config.txt` file with two numbers. First is the number of lines. Second number of files.
   - should contain `counter.txt` file with one number. For beginnig it should be set to zero. Keep position in puzzles.
   - list of puzzles accordingly to config files puzzle-1.csv, puzzle-2.csv ... 
+  - `solution.txt` is created automatically by the device after a puzzle is shown. It holds the current puzzle (in CSV format compatible with `puzzle-*.csv`) so that the next power-on can render the solution view. It is removed automatically after the solution is shown.
+
+## how it works (two-boot flow):
+
+---
+The push-button power switch fully cuts power between clicks, so the device boots from scratch on every press:
+
+1. **Boot 1 — puzzle**: no `solution.txt` on the SD card. The device reads the next puzzle from `puzzle-*.csv`, renders the chessboard, then writes the current puzzle data (id, FEN, solution, counter) into `solution.txt` and powers off.
+2. **Boot 2 — solution**: `solution.txt` exists. The device reloads the puzzle data, re-renders the chessboard from the FEN as the "previous" frame, overlays the solution text, performs a partial refresh, deletes `solution.txt` and powers off.
 
 ## schema:
 
