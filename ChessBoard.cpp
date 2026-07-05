@@ -37,3 +37,47 @@ void ChessBoard::printBoard() {
     Serial.println();
   }
 }
+
+char ChessBoard::getPieceAt(char* square) {
+  // square format: "e2" (file a-h, rank 1-8)
+  // board[0][0] = A8, board[7][7] = H1
+  char file = square[0]; // a-h
+  char rank = square[1]; // 1-8
+  int col = file - 'a'; // 0-7
+  int row = 8 - (rank - '0'); // 7-0
+  if (row >= 0 && row < 8 && col >= 0 && col < 8) {
+    return board[row][col];
+  }
+  return '.'; // empty or invalid
+}
+
+void ChessBoard::makeMove(char* uciMove) {
+  // UCI format: e2e4, g1f3, e7e8q (promotion)
+  char from[3] = {uciMove[0], uciMove[1], '\0'};
+  char to[3] = {uciMove[2], uciMove[3], '\0'};
+
+  // Convert to board indices
+  int fromCol = from[0] - 'a';
+  int fromRow = 8 - (from[1] - '0');
+  int toCol = to[0] - 'a';
+  int toRow = 8 - (to[1] - '0');
+
+  if (fromRow >= 0 && fromRow < 8 && fromCol >= 0 && fromCol < 8 &&
+      toRow >= 0 && toRow < 8 && toCol >= 0 && toCol < 8) {
+    // Move piece
+    char piece = board[fromRow][fromCol];
+    board[fromRow][fromCol] = '.';
+    board[toRow][toCol] = piece;
+
+    // Handle promotion (e.g., e7e8q)
+    if (strlen(uciMove) == 5) {
+      char promoPiece = uciMove[4];
+      // Convert to uppercase for white, lowercase for black
+      if (isupper(piece)) {
+        board[toRow][toCol] = toupper(promoPiece);
+      } else {
+        board[toRow][toCol] = tolower(promoPiece);
+      }
+    }
+  }
+}

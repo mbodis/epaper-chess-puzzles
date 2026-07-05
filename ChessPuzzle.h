@@ -54,6 +54,7 @@ public:
   void printToLog();
   void drawChessboard();
   void drawSolution();
+  char* convertSolutionToSan(); // Convert entire solution string from UCI to SAN
 
 private:
   // Renders the current puzzle (welcome / congratulations / chessboard

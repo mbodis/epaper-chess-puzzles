@@ -15,6 +15,8 @@ public:
   ChessBoard();
   void parseFEN(char* fenNotation);
   void printBoard();
+  char getPieceAt(char* square); // e.g. "e2" returns 'P', 'N', etc.
+  void makeMove(char* uciMove); // Execute UCI move on board (e.g., e2e4)
 };
 
 #endif  // CHESSBOARD_H
