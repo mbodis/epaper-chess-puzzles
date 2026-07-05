@@ -29,6 +29,19 @@ PuzzleMain::PuzzleMain() {
   Serial.println("[PuzzleMain] -- end --");
 }
 
+// render all - debug only
+// PuzzleMain::PuzzleMain() {
+//   Serial.println("[PuzzleMain] renderAll -- start --");
+//   CsvParser parser;
+//   if (parser.getPuzzle(&this->puzzle)) {
+//     this->puzzle.init();
+//     this->puzzle.printToLog();
+//     this->puzzle.drawChessboard();
+//     this->puzzle.drawSolution();
+//   }
+//   Serial.println("[PuzzleMain] renderAll -- end --");
+// }
+
 bool PuzzleMain::hasSolutionFile() {
   bool exists = SD.exists(this->SOLUTION_FILE);
   Serial.printf("[PuzzleMain] %s \n", exists ? "draw solution" : "draw new puzzle");

@@ -163,17 +163,44 @@ void ChessPuzzle::renderChessboardImage(UBYTE *BlackImage) {
     Paint_DrawString_EN(26 + 7 * 32, 280, "H", &Font16, WHITE, BLACK);
 
     // print chessboard details
-    Paint_DrawString_EN(290, 20, "puzzle: ", &Font12, WHITE, BLACK);
-    Paint_DrawString_EN(340, 20, this->id, &Font12, WHITE, BLACK);
+    // puzzle ID in top-right corner: #abc123 (commented out)
+    // char puzzleIdWithHash[50];
+    // snprintf(puzzleIdWithHash, sizeof(puzzleIdWithHash), "#%s", this->id);
+    // Paint_DrawString_EN(330, 22, puzzleIdWithHash, &Font12, WHITE, BLACK);
 
-    Paint_DrawString_EN(290, 30, "castling: ", &Font12, WHITE, BLACK);
-    Paint_DrawString_EN(360, 30, this->castlingAvailability, &Font12, WHITE, BLACK);
+    // triangle arrow before who is on move (outline for WHITE, filled for BLACK)
+    int arrowX = 298;
+    int arrowY = 30;
+    if (this->whiteIsOnTheMove) {
+      // WHITE: outline only (3 lines)
+      Paint_DrawLine(arrowX, arrowY, arrowX - 5, arrowY - 5, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+      Paint_DrawLine(arrowX, arrowY, arrowX - 5, arrowY + 5, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+      Paint_DrawLine(arrowX - 5, arrowY - 5, arrowX - 5, arrowY + 5, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+    } else {
+      // BLACK: filled (very dense horizontal lines)
+      Paint_DrawLine(arrowX, arrowY, arrowX - 5, arrowY - 5, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+      Paint_DrawLine(arrowX, arrowY, arrowX - 5, arrowY + 5, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+      Paint_DrawLine(arrowX - 5, arrowY - 5, arrowX - 5, arrowY + 5, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+      Paint_DrawLine(arrowX - 4, arrowY - 4, arrowX - 4, arrowY + 4, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+      Paint_DrawLine(arrowX - 3, arrowY - 3, arrowX - 3, arrowY + 3, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+      Paint_DrawLine(arrowX - 2, arrowY - 2, arrowX - 2, arrowY + 2, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+      Paint_DrawLine(arrowX - 1, arrowY - 1, arrowX - 1, arrowY + 1, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+    }
 
-    Paint_DrawString_EN(290, 40, "en passant: ", &Font12, WHITE, BLACK);
-    Paint_DrawString_EN(370, 40, this->enPassant, &Font12, WHITE, BLACK);
+    Paint_DrawString_EN(305, 22, this->whiteIsOnTheMove ? "WHITE" : "BLACK", &Font20, WHITE, BLACK);
 
-    Paint_DrawString_EN(290, 60, "next move:", &Font12, WHITE, BLACK);
-    Paint_DrawString_EN(290, 70, this->whiteIsOnTheMove ? "White" : "Black", &Font16, WHITE, BLACK);
+    // horizontal line separator below who is on move
+    // Paint_DrawLine(290, 50, 380, 50, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+
+    // compact format: labels on first line, values on second line
+    Paint_DrawString_EN(290, 50, "CASTLE", &Font12, WHITE, BLACK);
+    Paint_DrawString_EN(360, 50, "EP", &Font12, WHITE, BLACK);
+
+    Paint_DrawString_EN(290, 64, this->castlingAvailability, &Font12, WHITE, BLACK);
+    Paint_DrawString_EN(360, 64, this->enPassant, &Font12, WHITE, BLACK);
+
+    // horizontal line separator below CASTLE/EP
+    Paint_DrawLine(290, 80, 380, 80, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
   }
 }
 
@@ -205,7 +232,7 @@ void ChessPuzzle::drawSolution() {
 
   // Overlay the solution text only on the new buffer.
   Paint_SelectImage(NewImage);
-  Paint_DrawString_EN(290, 90, "solution:", &Font12, WHITE, BLACK);
+  Paint_DrawString_EN(290, 85, "SOLUTION:", &Font12, WHITE, BLACK);
   int yy = 100;
   char *partlySolution = strtok(this->solution, " ");
   while (partlySolution != nullptr) {
@@ -240,7 +267,7 @@ void ChessPuzzle::drawSolution() {
   Paint_SelectImage(BlackImage);
   Paint_Clear(WHITE);
 
-  Paint_DrawString_EN(290, 90, "solution:", &Font12, WHITE, BLACK);
+  Paint_DrawString_EN(290, 85, "SOLUTION:", &Font12, WHITE, BLACK);
   int yy = 100;
   char *partlySolution = strtok(this->solution, " ");
   while (partlySolution != nullptr) {
@@ -249,8 +276,8 @@ void ChessPuzzle::drawSolution() {
     yy += 15;
   }
 
-  int startX = 285;
-  int startY = 90;
+  int startX = 290;
+  int startY = 85;
   int endX = 380;
   int endY = 295;
   EPD_4IN2_PartialDisplay(startX, startY, endX, endY, BlackImage);
