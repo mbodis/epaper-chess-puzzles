@@ -414,7 +414,7 @@ void ChessPuzzle::drawSolution() {
     yy += 15;
   }
 
-  int startX = 290;
+  int startX = 280;
   int startY = 85;
   int endX = 380;
   int endY = 295;
