@@ -7,142 +7,6 @@ void ChessPuzzle::init() {
   this->chessBoard.parseFEN(this->fenNotation);
 }
 
-// Convert entire solution string from UCI to SAN
-// e.g., "e2e4 g1f3" -> "e4 Nf3"
-// With captures: "e2d4 g1f3" -> "exd4 Nf3"
-// Castling: e1g1 -> O-O, e1c1 -> O-O-O (white), e8g8 -> O-O, e8c8 -> O-O-O (black)
-// Updates board position after each move for correct translation
-// Uses a local copy of the board to avoid modifying the original
-//
-// TODO: Missing features:
-// - Check (+) and mate (#) notation
-char* ChessPuzzle::convertSolutionToSan() {
-  static char sanSolution[200]; // static to return pointer
-  sanSolution[0] = '\0';
-
-  // Create a local copy of the board for move simulation
-  ChessBoard tempBoard;
-  tempBoard.parseFEN(this->fenNotation);
-
-  // Make a copy of solution to tokenize
-  char solutionCopy[200];
-  strcpy(solutionCopy, this->solution);
-
-  char* uciMove = strtok(solutionCopy, " ");
-  bool first = true;
-  while (uciMove != nullptr) {
-    char sanMove[10];
-    // Use tempBoard to get piece at position
-    char from[3] = {uciMove[0], uciMove[1], '\0'};
-    char to[3] = {uciMove[2], uciMove[3], '\0'};
-    char piece = tempBoard.getPieceAt(from);
-    char targetPiece = tempBoard.getPieceAt(to);
-
-    // Check for castling (king moves 2 squares)
-    bool isCastling = (toupper(piece) == 'K' && abs(to[0] - from[0]) == 2);
-
-    if (isCastling) {
-      // Castling: O-O (kingside) or O-O-O (queenside)
-      if (to[0] > from[0]) {
-        strcpy(sanMove, "O-O"); // kingside
-      } else {
-        strcpy(sanMove, "O-O-O"); // queenside
-      }
-    } else {
-      // Check if this is a capture
-      bool isCapture = (targetPiece != '.');
-
-      // Check for en passant: pawn moving diagonally to empty square
-      bool isEnPassant = (toupper(piece) == 'P' && abs(to[0] - from[0]) == 1 && targetPiece == '.');
-
-      // Convert piece letter to uppercase for display
-      char pieceLetter = toupper(piece);
-      if (pieceLetter == 'P') {
-        // Pawn: just destination (e.g., e2e4 -> e4) or exd4 for capture
-        if (isCapture || isEnPassant) {
-          sanMove[0] = from[0]; // file of origin (e.g., 'e' in exd4)
-          sanMove[1] = 'x';
-          sanMove[2] = to[0];
-          sanMove[3] = to[1];
-          sanMove[4] = '\0';
-        } else {
-          sanMove[0] = to[0];
-          sanMove[1] = to[1];
-          sanMove[2] = '\0';
-        }
-      } else {
-        // Other pieces: piece letter + destination (e.g., g1f3 -> Nf3) or Nxf3 for capture
-        // Handle disambiguation if multiple pieces of same type can reach destination
-        sanMove[0] = pieceLetter;
-
-        // Check for disambiguation (multiple pieces of same type can reach target)
-        int disambigCount = 0;
-        bool sameFile = false;
-
-        for (int r = 0; r < 8; r++) {
-          for (int c = 0; c < 8; c++) {
-            char square[3];
-            square[0] = (char)('a' + c);
-            square[1] = (char)('8' - r);
-            square[2] = '\0';
-            char p = tempBoard.getPieceAt(square);
-            if (toupper(p) == pieceLetter && p != '.') {
-              // Found a piece of same type, check if it's not the moving piece
-              if (r != (8 - (from[1] - '0')) || c != (from[0] - 'a')) {
-                // Simplified: assume it can reach destination (full move validation is complex)
-                // For puzzles, this is usually sufficient
-                disambigCount++;
-                // Check if on same file (column)
-                if (c == (from[0] - 'a')) {
-                  sameFile = true;
-                }
-              }
-            }
-          }
-        }
-
-        int idx = 1;
-        if (disambigCount > 0) {
-          // Add disambiguation: use rank if pieces are on same file, otherwise use file
-          if (sameFile) {
-            sanMove[idx++] = from[1]; // rank (e.g., '3' in N3d7)
-          } else {
-            sanMove[idx++] = from[0]; // file (e.g., 'b' in Nbd7)
-          }
-        }
-
-        if (isCapture) {
-          sanMove[idx++] = 'x';
-        }
-        sanMove[idx++] = to[0];
-        sanMove[idx++] = to[1];
-        sanMove[idx] = '\0';
-      }
-
-      // Handle promotion (e.g., e7e8q -> e8=Q or exd8=Q)
-      if (strlen(uciMove) == 5) {
-        char promo = toupper(uciMove[4]);
-        int len = strlen(sanMove);
-        sanMove[len] = '=';
-        sanMove[len + 1] = promo;
-        sanMove[len + 2] = '\0';
-      }
-    }
-
-    if (!first) {
-      strcat(sanSolution, " ");
-    }
-    strcat(sanSolution, sanMove);
-    first = false;
-
-    // Update temp board position for next move
-    tempBoard.makeMove(uciMove);
-    uciMove = strtok(nullptr, " ");
-  }
-
-  return sanSolution;
-}
-
 void ChessPuzzle::printToLog() {
   Serial.println("[ChessPuzzle] --selected puzzle--");
   Serial.printf("[ChessPuzzle] id: %s \n", this->id);
@@ -370,8 +234,7 @@ void ChessPuzzle::drawSolution() {
   Paint_SelectImage(NewImage);
   Paint_DrawString_EN(290, 85, "SOLUTION:", &Font12, WHITE, BLACK);
   int yy = 100;
-  char* sanSolution = this->convertSolutionToSan();
-  char *partlySolution = strtok(sanSolution, " ");
+  char *partlySolution = strtok(this->solution, " ");
   while (partlySolution != nullptr) {
     Paint_DrawString_EN(290, yy, partlySolution, &Font16, WHITE, BLACK);
     partlySolution = strtok(nullptr, " ");
@@ -406,8 +269,7 @@ void ChessPuzzle::drawSolution() {
 
   Paint_DrawString_EN(290, 85, "SOLUTION:", &Font12, WHITE, BLACK);
   int yy = 100;
-  char* sanSolution = this->convertSolutionToSan();
-  char *partlySolution = strtok(sanSolution, " ");
+  char *partlySolution = strtok(this->solution, " ");
   while (partlySolution != nullptr) {
     Paint_DrawString_EN(290, yy, partlySolution, &Font16, WHITE, BLACK);
     partlySolution = strtok(nullptr, " ");

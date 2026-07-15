@@ -4,6 +4,7 @@ FILE="lichess_db_puzzle.csv"
 
 LINES=${1:-1000}
 FILES=${2:-100}
+CONVERT_SAN=${3:-true}
 
 MAX_MOVES=13
 
@@ -31,10 +32,16 @@ awk -F',' -v max="$MAX_MOVES" '{
     if (moves <= max) print
 }' temp > temp_filtered && mv temp_filtered temp
 
-
 echo "[epaper-chess-puzzles]: cut first LINES * FILES lines"
 CSV_LINES=$(expr $LINES '*' $FILES)
 head -n $CSV_LINES temp > temp2 && mv temp2 temp
+
+if [ "$CONVERT_SAN" = "true" ]; then
+    echo "[epaper-chess-puzzles]: convert UCI to SAN notation"
+    python3 convert_uci_to_san.py temp temp_san && mv temp_san temp
+else
+    echo "[epaper-chess-puzzles]: skipping UCI to SAN conversion"
+fi
 
 echo "[epaper-chess-puzzles]: split into files"
 mkdir -p sd-card

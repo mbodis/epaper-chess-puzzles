@@ -51,10 +51,16 @@ Perfect for practicing chess tactics on the go, with long battery life thanks to
      #define EPD_BUSY_PIN 2
      ```
 5. wire by attached scheme
-6. generate puzzles and config by running `generate-puzzles.sh` (this will create puzzles and config in sd-card folder)
+6. install Python chess library for UCI to SAN conversion:
+   ```bash
+   pip3 install chess
+   ```
+7. generate puzzles and config by running `generate-puzzles.sh` (this will create puzzles and config in sd-card folder)
+   - by default converts UCI notation to SAN notation (e.g., "e2e4" → "e4")
+   - to skip conversion and keep UCI format: `./generate-puzzles.sh 1000 100 false`
    - copy content of sd-card folder into memory card (root folder)
-7. select proper board and port in Arduino IDE
-8. upload and enjoy
+8. select proper board and port in Arduino IDE
+9. upload and enjoy
 
 ## SD card:
 
