@@ -4,7 +4,6 @@ FILE="lichess_db_puzzle.csv"
 
 LINES=${1:-1000}
 FILES=${2:-100}
-CONVERT_SAN=${3:-true}
 
 MAX_MOVES=13
 
@@ -24,7 +23,7 @@ if [ ! -f $FILE ]; then
 fi
 
 echo "[epaper-chess-puzzles]: remove 1 line of CSV"
-tail -n +2 $FILE > temp
+tail -n +2 "$FILE" > temp
 
 echo "[epaper-chess-puzzles]: filter puzzles with solution length <= MAX_MOVES (3rd CSV column)"
 awk -F',' -v max="$MAX_MOVES" '{
@@ -34,24 +33,37 @@ awk -F',' -v max="$MAX_MOVES" '{
 
 echo "[epaper-chess-puzzles]: cut first LINES * FILES lines"
 CSV_LINES=$(expr $LINES '*' $FILES)
-head -n $CSV_LINES temp > temp2 && mv temp2 temp
 
-if [ "$CONVERT_SAN" = "true" ]; then
-    echo "[epaper-chess-puzzles]: convert UCI to SAN notation"
-    python3 convert_uci_to_san.py temp temp_san && mv temp_san temp
-else
-    echo "[epaper-chess-puzzles]: skipping UCI to SAN conversion"
+AVAILABLE_LINES=$(awk 'END { print NR + 0 }' temp)
+if [ "$AVAILABLE_LINES" -lt "$CSV_LINES" ]; then
+    echo "[epaper-chess-puzzles]: error: requested $CSV_LINES puzzles, but only $AVAILABLE_LINES are available after filtering"
+    rm -f temp
+    exit 1
 fi
+
+head -n "$CSV_LINES" temp > temp2 && mv temp2 temp
+
+echo "[epaper-chess-puzzles]: apply opponent move and convert solution to SAN"
+PYTHON=python3
+if [ -x .venv/bin/python ]; then PYTHON=.venv/bin/python; fi
+if ! "$PYTHON" convert_uci_to_san.py temp temp_san; then
+    echo "[epaper-chess-puzzles]: error: puzzle conversion failed"
+    rm -f temp temp_san
+    exit 1
+fi
+mv temp_san temp || exit 1
 
 echo "[epaper-chess-puzzles]: split into files"
 mkdir -p sd-card
+rm -f sd-card/puzzle-*.csv
 
-split -d -l ${LINES} temp "sd-card/puzzle.csv"
+split -d -l "$LINES" temp "sd-card/puzzle.csv"
 
 num=1
 for file in sd-card/puzzle*; do
+    [ -f "$file" ] || continue
     mv "$file" "sd-card/puzzle-$num.csv"
-    ((num++))
+    num=$((num + 1))
 done
 
 rm temp

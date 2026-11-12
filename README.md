@@ -51,13 +51,16 @@ Perfect for practicing chess tactics on the go, with long battery life thanks to
      #define EPD_BUSY_PIN 2
      ```
 5. wire by attached scheme
-6. install Python chess library for UCI to SAN conversion:
+6. create and activate a virtual environment, then install the Python chess library:
    ```bash
-   pip3 install chess
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install chess
    ```
-7. generate puzzles and config by running `generate-puzzles.sh` (this will create puzzles and config in sd-card folder)
-   - by default converts UCI notation to SAN notation (e.g., "e2e4" → "e4")
-   - to skip conversion and keep UCI format: `./generate-puzzles.sh 1000 100 false`
+7. generate puzzles and config by running `./generate-puzzles.sh` (this will create puzzles and config in sd-card folder; the script uses `.venv/bin/python` automatically when present)
+   - converts the solution to SAN notation (e.g., "e2e4" → "e4")
+   - Lichess stores the FEN before the opponent's move and includes that move first in `Moves`. The generator applies that first move, saves the resulting FEN, and stores only the remaining solution moves.
+   - for a four-puzzle input sample, run `./generate-puzzles.sh 4 1`; generation stops with an error if the filtered input has fewer puzzles than requested
    - copy content of sd-card folder into memory card (root folder)
 8. select proper board and port in Arduino IDE
 9. upload and enjoy
